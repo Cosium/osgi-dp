@@ -332,7 +332,7 @@ public abstract class AbstractDpMojo extends AbstractMojo {
                         (v1, v2) -> v2);
 
         if (version.endsWith("-SNAPSHOT")) {
-            version = version.replaceAll("-SNAPSHOT$", "." + this.session.getStartTime().getTime());
+            version = version.replaceAll("-SNAPSHOT$", "." + this.session.getStartTime().toInstant().getEpochSecond());
         }
 
         return new Version(version);
