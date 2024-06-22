@@ -26,16 +26,19 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
+import java.util.regex.Pattern;
 import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
@@ -131,6 +134,9 @@ public abstract class AbstractDpMojo extends AbstractMojo {
      */
     @Parameter(property = "version")
     private String version;
+
+    @Parameter(property = "versionPartsSubstitutions")
+    private Map<String, String> versionPartsSubstitutions;
 
     public AbstractDpMojo() {
         super();
@@ -315,7 +321,16 @@ public abstract class AbstractDpMojo extends AbstractMojo {
             getLog().debug("Failed to get qualified tycho version", e);
         }
 
-        String version = this.project.getVersion();
+
+        String version = Optional.ofNullable(versionPartsSubstitutions)
+                .orElseGet(Collections::emptyMap)
+                .entrySet()
+                .stream()
+                .reduce(
+                        this.project.getVersion(),
+                        (aVersion, substitution) -> aVersion.replaceAll(Pattern.quote(substitution.getKey()), substitution.getValue()),
+                        (v1, v2) -> v2);
+
         if (version.endsWith("-SNAPSHOT")) {
             version = version.replaceAll("-SNAPSHOT$", "." + this.session.getStartTime().getTime());
         }
