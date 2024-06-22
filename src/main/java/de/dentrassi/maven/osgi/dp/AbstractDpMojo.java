@@ -26,12 +26,12 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.JarEntry;
@@ -136,7 +136,7 @@ public abstract class AbstractDpMojo extends AbstractMojo {
     private String version;
 
     @Parameter(property = "versionPartsSubstitutions")
-    private Map<String, String> versionPartsSubstitutions;
+    private Properties versionPartsSubstitutions;
 
     public AbstractDpMojo() {
         super();
@@ -323,12 +323,12 @@ public abstract class AbstractDpMojo extends AbstractMojo {
 
 
         String version = Optional.ofNullable(versionPartsSubstitutions)
-                .orElseGet(Collections::emptyMap)
+                .orElseGet(Properties::new)
                 .entrySet()
                 .stream()
                 .reduce(
                         this.project.getVersion(),
-                        (aVersion, substitution) -> aVersion.replaceAll(Pattern.quote(substitution.getKey()), substitution.getValue()),
+                        (aVersion, substitution) -> aVersion.replaceAll(Pattern.quote(String.valueOf(substitution.getKey())), String.valueOf(substitution.getValue())),
                         (v1, v2) -> v2);
 
         if (version.endsWith("-SNAPSHOT")) {
