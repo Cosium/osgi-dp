@@ -36,7 +36,6 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
-import org.apache.maven.artifact.repository.ArtifactRepository;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.plugin.AbstractMojo;
@@ -50,13 +49,11 @@ import org.eclipse.aether.RepositorySystem;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.graph.DefaultDependencyNode;
-import org.eclipse.aether.impl.ArtifactResolver;
 import org.eclipse.aether.resolution.ArtifactRequest;
 import org.eclipse.aether.resolution.ArtifactResolutionException;
 import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.util.artifact.JavaScopes;
 import org.eclipse.tycho.ReactorProject;
-import org.eclipse.tycho.core.DependencyResolver;
 import org.eclipse.tycho.core.TychoProject;
 import org.osgi.framework.Version;
 
@@ -96,9 +93,6 @@ public abstract class AbstractDpMojo extends AbstractMojo {
     @Component
     protected MavenProjectHelper projectHelper;
 
-    @Component
-    private DependencyResolver dependencyResolver;
-
     private final Set<String> tychoWalkerProjects = new HashSet<>(Arrays.asList("eclipse-feature"));
 
     @Component(role = TychoProject.class)
@@ -109,15 +103,6 @@ public abstract class AbstractDpMojo extends AbstractMojo {
      */
     @Parameter
     private Dependency[] additionalDependencies;
-
-    @Component
-    private ArtifactResolver resolver;
-
-    @Parameter(property = "localRepository", readonly = true)
-    private ArtifactRepository localRepository;
-
-    @Parameter(property = "project.remoteArtifactRepositories", readonly = true)
-    private List<ArtifactRepository> remoteRepositories;
 
     /**
      * An optional explicit version
@@ -239,7 +224,7 @@ public abstract class AbstractDpMojo extends AbstractMojo {
                 requests.add(new ArtifactRequest(new DefaultDependencyNode(adep)));
             }
 
-            final List<ArtifactResult> result = this.resolver.resolveArtifacts(this.repositorySession, requests);
+            final List<ArtifactResult> result = this.repoSystem.resolveArtifacts(this.repositorySession, requests);
 
             for (final ArtifactResult ares : result) {
                 getLog().debug("Additional dependency: " + ares);
